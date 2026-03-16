@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send } from "lucide-react";
-import avatarImg from "@/assets/avatar-assistant.png";
+import avatarMale from "@/assets/avatar-male.png";
+import avatarFemale from "@/assets/avatar-female.png";
 
 const avatarResponses: Record<string, string> = {
   "easy jobs": "I'd recommend starting with Remotasks or Swagbucks — they're beginner-friendly and accept workers from Kenya! 🎉",
@@ -11,12 +12,25 @@ const avatarResponses: Record<string, string> = {
   default: "I'm here to help you find legit online jobs in Kenya! Try asking about easy jobs, M-Pesa payments, or how to spot scams. 😊",
 };
 
+type Gender = "male" | "female";
+
 const AvatarAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [gender, setGender] = useState<Gender | null>(() => {
+    const saved = localStorage.getItem("kazi-gender");
+    return saved === "male" || saved === "female" ? saved : null;
+  });
   const [messages, setMessages] = useState<{ role: "user" | "bot"; text: string }[]>([
     { role: "bot", text: "Habari! 👋 I'm Kazi, your job-finding assistant. Ask me anything about online jobs in Kenya!" },
   ]);
   const [input, setInput] = useState("");
+
+  const avatarImg = gender === "female" ? avatarFemale : avatarMale;
+
+  const handleGenderSelect = (g: Gender) => {
+    setGender(g);
+    localStorage.setItem("kazi-gender", g);
+  };
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -36,6 +50,8 @@ const AvatarAssistant = () => {
       setMessages((prev) => [...prev, { role: "bot", text: response }]);
     }, 800);
   };
+
+  const showGenderPicker = isOpen && !gender;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -60,41 +76,71 @@ const AvatarAssistant = () => {
               </button>
             </div>
 
-            {/* Messages */}
-            <div className="h-64 overflow-y-auto p-3 space-y-3">
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] px-3 py-2 rounded-xl text-sm font-body ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm"
-                        : "bg-muted text-foreground rounded-bl-sm"
-                    }`}
+            {showGenderPicker ? (
+              /* Gender Picker */
+              <div className="p-6 text-center space-y-4">
+                <p className="font-display font-bold text-foreground text-sm">Choose your Kazi assistant!</p>
+                <p className="text-xs text-muted-foreground font-body">Pick the avatar you'd like to chat with</p>
+                <div className="flex justify-center gap-6 pt-2">
+                  <button
+                    onClick={() => handleGenderSelect("male")}
+                    className="group flex flex-col items-center gap-2 hover:scale-105 transition-transform"
                   >
-                    {msg.text}
-                  </div>
+                    <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-primary/30 group-hover:border-primary transition-colors">
+                      <img src={avatarMale} alt="Male Kazi" className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-xs font-body font-medium text-muted-foreground group-hover:text-foreground">Kazi</span>
+                  </button>
+                  <button
+                    onClick={() => handleGenderSelect("female")}
+                    className="group flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+                  >
+                    <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-primary/30 group-hover:border-primary transition-colors">
+                      <img src={avatarFemale} alt="Female Kazi" className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-xs font-body font-medium text-muted-foreground group-hover:text-foreground">Kazi</span>
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <>
+                {/* Messages */}
+                <div className="h-64 overflow-y-auto p-3 space-y-3">
+                  {messages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[85%] px-3 py-2 rounded-xl text-sm font-body ${
+                          msg.role === "user"
+                            ? "bg-primary text-primary-foreground rounded-br-sm"
+                            : "bg-muted text-foreground rounded-bl-sm"
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-            {/* Input */}
-            <div className="p-3 border-t border-border">
-              <form
-                onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                className="flex gap-2"
-              >
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about jobs..."
-                  className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm font-body text-foreground outline-none placeholder:text-muted-foreground"
-                />
-                <button type="submit" className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 transition-opacity">
-                  <Send className="w-4 h-4" />
-                </button>
-              </form>
-            </div>
+                {/* Input */}
+                <div className="p-3 border-t border-border">
+                  <form
+                    onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+                    className="flex gap-2"
+                  >
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Ask about jobs..."
+                      className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm font-body text-foreground outline-none placeholder:text-muted-foreground"
+                    />
+                    <button type="submit" className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 transition-opacity">
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </form>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
