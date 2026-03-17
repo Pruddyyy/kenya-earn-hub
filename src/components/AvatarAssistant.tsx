@@ -145,27 +145,40 @@ const AvatarAssistant = () => {
         )}
       </AnimatePresence>
 
-      {/* Avatar Button */}
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 rounded-full bg-primary card-shadow-hover overflow-hidden border-4 border-card hover:scale-105 transition-transform"
-        animate={
-          isOpen
-            ? { x: 0, y: 0, rotate: 0 }
-            : {
-                x: [0, -20, 10, -30, 15, 0],
-                y: [0, -10, -25, -5, -18, 0],
-                rotate: [0, -5, 3, -3, 5, 0],
-              }
-        }
-        transition={
-          isOpen
-            ? { duration: 0.3 }
-            : { repeat: Infinity, duration: 8, ease: "easeInOut" }
-        }
-      >
-        <img src={avatarImg} alt="Kazi assistant" className="w-full h-full object-cover" />
-      </motion.button>
+      {/* 3D Avatar Button */}
+      <div style={{ perspective: "600px" }}>
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-20 h-20 rounded-full card-shadow-hover overflow-hidden border-4 border-card"
+          style={{ transformStyle: "preserve-3d" }}
+          animate={
+            isOpen
+              ? { x: 0, y: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1 }
+              : {
+                  x: [0, -25, 15, -35, 20, 0],
+                  y: [0, -15, -30, -8, -22, 0],
+                  rotateX: [0, 15, -10, 8, -12, 0],
+                  rotateY: [0, -20, 15, -25, 10, 0],
+                  rotateZ: [0, -5, 4, -3, 6, 0],
+                  scale: [1, 1.05, 0.97, 1.08, 0.98, 1],
+                }
+          }
+          transition={
+            isOpen
+              ? { duration: 0.3 }
+              : { repeat: Infinity, duration: 10, ease: "easeInOut" }
+          }
+          whileHover={{
+            scale: 1.15,
+            rotateY: 15,
+            rotateX: -10,
+            transition: { duration: 0.3 },
+          }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <img src={avatarImg} alt="Kazi assistant" className="w-full h-full object-cover" />
+        </motion.button>
+      </div>
     </div>
   );
 };
