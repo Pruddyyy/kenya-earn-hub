@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send } from "lucide-react";
 import avatarMale from "@/assets/avatar-male.png";
@@ -17,11 +17,11 @@ type Gender = "male" | "female";
 const AvatarAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [gender, setGender] = useState<Gender | null>(() => {
-    const saved = localStorage.getItem("kazi-gender");
+    const saved = localStorage.getItem("teemz-gender");
     return saved === "male" || saved === "female" ? saved : null;
   });
   const [messages, setMessages] = useState<{ role: "user" | "bot"; text: string }[]>([
-    { role: "bot", text: "Habari! 👋 I'm Kazi, your job-finding assistant. Ask me anything about online jobs in Kenya!" },
+    { role: "bot", text: "Habari! 👋 I'm Teemz, your job-finding assistant. Ask me anything about online jobs in Kenya!" },
   ]);
   const [input, setInput] = useState("");
 
@@ -29,7 +29,7 @@ const AvatarAssistant = () => {
 
   const handleGenderSelect = (g: Gender) => {
     setGender(g);
-    localStorage.setItem("kazi-gender", g);
+    localStorage.setItem("teemz-gender", g);
   };
 
   const handleSend = () => {
@@ -54,7 +54,7 @@ const AvatarAssistant = () => {
   const showGenderPicker = isOpen && !gender;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-0 right-4 z-50">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -62,14 +62,14 @@ const AvatarAssistant = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="absolute bottom-20 right-0 w-80 bg-card rounded-2xl card-shadow overflow-hidden border border-border"
+            className="absolute bottom-36 right-0 w-80 bg-card rounded-2xl card-shadow overflow-hidden border border-border"
           >
             {/* Header */}
             <div className="hero-gradient p-4 flex items-center gap-3">
-              <img src={avatarImg} alt="Kazi assistant" className="w-10 h-10 rounded-full bg-card object-cover" />
+              <img src={avatarImg} alt="Teemz assistant" className="w-10 h-10 rounded-full bg-card object-cover" />
               <div className="flex-1">
-                <p className="font-display font-bold text-primary-foreground text-sm">Kazi</p>
-                <p className="text-primary-foreground/70 text-xs font-body">Your Job Assistant</p>
+                <p className="font-chat font-bold text-primary-foreground text-sm">Teemz</p>
+                <p className="text-primary-foreground/70 text-xs font-chat">Your Job Assistant</p>
               </div>
               <button onClick={() => setIsOpen(false)} className="text-primary-foreground/70 hover:text-primary-foreground">
                 <X className="w-4 h-4" />
@@ -77,29 +77,25 @@ const AvatarAssistant = () => {
             </div>
 
             {showGenderPicker ? (
-              /* Gender Picker */
               <div className="p-6 text-center space-y-4">
-                <p className="font-display font-bold text-foreground text-sm">Choose your Kazi assistant!</p>
-                <p className="text-xs text-muted-foreground font-body">Pick the avatar you'd like to chat with</p>
-                <div className="flex justify-center gap-6 pt-2">
-                  <button
-                    onClick={() => handleGenderSelect("male")}
-                    className="group flex flex-col items-center gap-2 hover:scale-105 transition-transform"
-                  >
-                    <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-primary/30 group-hover:border-primary transition-colors">
-                      <img src={avatarMale} alt="Male Kazi" className="w-full h-full object-cover" />
-                    </div>
-                    <span className="text-xs font-body font-medium text-muted-foreground group-hover:text-foreground">Kazi</span>
-                  </button>
-                  <button
-                    onClick={() => handleGenderSelect("female")}
-                    className="group flex flex-col items-center gap-2 hover:scale-105 transition-transform"
-                  >
-                    <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-primary/30 group-hover:border-primary transition-colors">
-                      <img src={avatarFemale} alt="Female Kazi" className="w-full h-full object-cover" />
-                    </div>
-                    <span className="text-xs font-body font-medium text-muted-foreground group-hover:text-foreground">Kazi</span>
-                  </button>
+                <p className="font-chat font-bold text-foreground text-sm">Choose your Teemz!</p>
+                <p className="text-xs text-muted-foreground font-chat">Pick the avatar you'd like to chat with</p>
+                <div className="flex justify-center gap-8 pt-2">
+                  {[
+                    { g: "male" as Gender, img: avatarMale, label: "Teemz" },
+                    { g: "female" as Gender, img: avatarFemale, label: "Teemz" },
+                  ].map(({ g, img, label }) => (
+                    <button
+                      key={g}
+                      onClick={() => handleGenderSelect(g)}
+                      className="group flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+                    >
+                      <div className="w-24 h-28 overflow-hidden drop-shadow-lg group-hover:drop-shadow-2xl transition-all">
+                        <img src={img} alt={`${label} ${g}`} className="w-full h-full object-contain" />
+                      </div>
+                      <span className="text-xs font-chat font-semibold text-muted-foreground group-hover:text-foreground">{label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             ) : (
@@ -109,7 +105,7 @@ const AvatarAssistant = () => {
                   {messages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                       <div
-                        className={`max-w-[85%] px-3 py-2 rounded-xl text-sm font-body ${
+                        className={`max-w-[85%] px-3 py-2 rounded-xl text-sm font-chat ${
                           msg.role === "user"
                             ? "bg-primary text-primary-foreground rounded-br-sm"
                             : "bg-muted text-foreground rounded-bl-sm"
@@ -131,8 +127,8 @@ const AvatarAssistant = () => {
                       type="text"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder="Ask about jobs..."
-                      className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm font-body text-foreground outline-none placeholder:text-muted-foreground"
+                      placeholder="Ask Teemz about jobs..."
+                      className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm font-chat text-foreground outline-none placeholder:text-muted-foreground"
                     />
                     <button type="submit" className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 transition-opacity">
                       <Send className="w-4 h-4" />
@@ -145,22 +141,43 @@ const AvatarAssistant = () => {
         )}
       </AnimatePresence>
 
-      {/* 3D Avatar Button */}
-      <div style={{ perspective: "600px" }}>
+      {/* Gaming-style Avatar — full character, no bubble */}
+      <div style={{ perspective: "800px" }} className="relative">
+        {/* Name tag */}
+        <motion.div
+          className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap"
+          animate={{ opacity: [0.7, 1, 0.7] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+        >
+          <span className="bg-primary/90 text-primary-foreground text-[10px] font-chat font-bold px-2 py-0.5 rounded-full shadow-lg">
+            Teemz
+          </span>
+        </motion.div>
+
+        {/* Drop shadow on ground */}
+        <motion.div
+          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-16 h-3 bg-foreground/10 rounded-full blur-sm"
+          animate={
+            isOpen
+              ? { scaleX: 1, opacity: 0.3 }
+              : { scaleX: [1, 0.8, 1.1, 0.85, 1], opacity: [0.3, 0.2, 0.35, 0.2, 0.3] }
+          }
+          transition={isOpen ? { duration: 0.3 } : { repeat: Infinity, duration: 10, ease: "easeInOut" }}
+        />
+
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-20 h-20 rounded-full card-shadow-hover overflow-hidden border-4 border-card"
+          className="w-24 h-28 overflow-visible bg-transparent border-none cursor-pointer relative"
           style={{ transformStyle: "preserve-3d" }}
           animate={
             isOpen
-              ? { x: 0, y: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1 }
+              ? { x: 0, y: 0, rotateY: 0, rotateZ: 0, scale: 1 }
               : {
-                  x: [0, -25, 15, -35, 20, 0],
-                  y: [0, -15, -30, -8, -22, 0],
-                  rotateX: [0, 15, -10, 8, -12, 0],
-                  rotateY: [0, -20, 15, -25, 10, 0],
-                  rotateZ: [0, -5, 4, -3, 6, 0],
-                  scale: [1, 1.05, 0.97, 1.08, 0.98, 1],
+                  x: [0, -20, 12, -28, 18, 0],
+                  y: [0, -8, -18, -4, -14, 0],
+                  rotateY: [0, -12, 8, -15, 6, 0],
+                  rotateZ: [0, -3, 2, -2, 3, 0],
+                  scale: [1, 1.03, 0.98, 1.05, 0.97, 1],
                 }
           }
           transition={
@@ -169,14 +186,19 @@ const AvatarAssistant = () => {
               : { repeat: Infinity, duration: 10, ease: "easeInOut" }
           }
           whileHover={{
-            scale: 1.15,
-            rotateY: 15,
-            rotateX: -10,
+            scale: 1.12,
+            rotateY: 10,
+            y: -6,
             transition: { duration: 0.3 },
           }}
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.92 }}
         >
-          <img src={avatarImg} alt="Kazi assistant" className="w-full h-full object-cover" />
+          <img
+            src={avatarImg}
+            alt="Teemz assistant"
+            className="w-full h-full object-contain drop-shadow-2xl"
+            style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }}
+          />
         </motion.button>
       </div>
     </div>

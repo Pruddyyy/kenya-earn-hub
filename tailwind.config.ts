@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Plus Jakarta Sans'", "sans-serif"],
-        body: ["'Inter'", "sans-serif"],
+        display: ["'Baloo 2'", "cursive"],
+        body: ["'Nunito'", "sans-serif"],
+        chat: ["'Fredoka'", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
