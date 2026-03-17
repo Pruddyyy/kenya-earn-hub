@@ -19,6 +19,7 @@ export interface Job {
   isNew?: boolean;
   scamRisk: "safe" | "moderate" | "high";
   postedDate: string;
+  countryOrigin?: string;
 }
 
 export type JobCategory =
