@@ -149,8 +149,20 @@ const AvatarAssistant = () => {
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         className="w-16 h-16 rounded-full bg-primary card-shadow-hover overflow-hidden border-4 border-card hover:scale-105 transition-transform"
-        animate={{ y: [0, -6, 0] }}
-        transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+        animate={
+          isOpen
+            ? { x: 0, y: 0, rotate: 0 }
+            : {
+                x: [0, -20, 10, -30, 15, 0],
+                y: [0, -10, -25, -5, -18, 0],
+                rotate: [0, -5, 3, -3, 5, 0],
+              }
+        }
+        transition={
+          isOpen
+            ? { duration: 0.3 }
+            : { repeat: Infinity, duration: 8, ease: "easeInOut" }
+        }
       >
         <img src={avatarImg} alt="Kazi assistant" className="w-full h-full object-cover" />
       </motion.button>
