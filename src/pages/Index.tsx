@@ -1,11 +1,41 @@
-import { useState, useMemo } from "react";
-import { Search, TrendingUp, Star, Zap } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Search, TrendingUp, Star, Zap, RefreshCw, Globe } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import JobCard from "@/components/JobCard";
 import FilterSidebar from "@/components/FilterSidebar";
 import ResourceSection from "@/components/ResourceSection";
 import AvatarAssistant from "@/components/AvatarAssistant";
 import { mockJobs } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { Job } from "@/types/jobs";
+import { useToast } from "@/hooks/use-toast";
+
+// Map DB row to frontend Job type
+function mapDbJob(row: any): Job {
+  return {
+    id: row.id,
+    title: row.title,
+    company: row.company,
+    platform: row.source_platform || row.company,
+    category: row.category as any,
+    payRate: row.pay_rate || 'Varies',
+    currency: (row.currency || 'USD') as any,
+    paymentMethods: row.payment_methods || [],
+    duration: row.duration || 'Varies',
+    paymentFrequency: 'Varies',
+    requirements: row.requirements || [],
+    skillLevel: (row.skill_level || 'Beginner') as any,
+    kenyaAccessible: row.kenya_accessible ?? true,
+    vpnRequired: false,
+    mpesaCompatible: row.mpesa_compatible ?? false,
+    estimatedMonthly: '',
+    link: row.source_url || '#',
+    isNew: new Date(row.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000),
+    scamRisk: (row.scam_risk?.toLowerCase() || 'safe') as any,
+    postedDate: new Date(row.created_at).toLocaleDateString(),
+    countryOrigin: row.country_origin,
+  };
+}
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -13,9 +43,45 @@ const Index = () => {
   const [beginnerOnly, setBeginnerOnly] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [dbJobs, setDbJobs] = useState<Job[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [lastScan, setLastScan] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Fetch jobs from database
+  const fetchJobs = async () => {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (data && data.length > 0) {
+      setDbJobs(data.map(mapDbJob));
+    }
+  };
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  // Combine DB jobs with mock jobs (mock as fallback)
+  const allJobs = dbJobs.length > 0 ? [...dbJobs, ...mockJobs] : mockJobs;
+
+  // Deduplicate by title+company
+  const dedupedJobs = useMemo(() => {
+    const seen = new Set<string>();
+    return allJobs.filter(job => {
+      const key = `${job.title.toLowerCase()}-${job.company.toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [allJobs]);
 
   const filteredJobs = useMemo(() => {
-    return mockJobs.filter((job) => {
+    return dedupedJobs.filter((job) => {
       if (selectedCategory !== "All" && job.category !== selectedCategory) return false;
       if (mpesaOnly && !job.mpesaCompatible) return false;
       if (beginnerOnly && job.skillLevel !== "Beginner") return false;
@@ -23,7 +89,33 @@ const Index = () => {
       if (searchQuery && !job.title.toLowerCase().includes(searchQuery.toLowerCase()) && !job.company.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     });
-  }, [selectedCategory, mpesaOnly, beginnerOnly, selectedPayment, searchQuery]);
+  }, [dedupedJobs, selectedCategory, mpesaOnly, beginnerOnly, selectedPayment, searchQuery]);
+
+  const handleScanJobs = async () => {
+    setIsScanning(true);
+    toast({ title: "🌍 Scanning international job sites...", description: "Searching USA, UAE, UK, China and more for Kenya-accessible jobs" });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scan-jobs', {
+        body: { maxQueries: 8 },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({ title: "✅ Scan complete!", description: `Found ${data.jobsFound} new jobs from ${data.queriesRun} searches` });
+        setLastScan(new Date().toLocaleTimeString());
+        await fetchJobs();
+      } else {
+        throw new Error(data?.error || 'Scan failed');
+      }
+    } catch (err: any) {
+      console.error('Scan error:', err);
+      toast({ title: "Scan error", description: err.message || "Failed to scan jobs", variant: "destructive" });
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,20 +139,41 @@ const Index = () => {
 
       {/* Stats Bar */}
       <div className="bg-card border-b border-border">
-        <div className="container max-w-6xl mx-auto px-4 py-4 flex items-center justify-center gap-8 flex-wrap">
-          <div className="flex items-center gap-2 text-sm font-body">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <span className="text-muted-foreground"><strong className="text-foreground">{mockJobs.length}</strong> Verified Jobs</span>
+        <div className="container max-w-6xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-8 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-body">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground"><strong className="text-foreground">{dedupedJobs.length}</strong> Verified Jobs</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-body">
+              <Star className="w-4 h-4 text-warning" />
+              <span className="text-muted-foreground"><strong className="text-foreground">{dedupedJobs.filter(j => j.skillLevel === "Beginner").length}</strong> Beginner Friendly</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-body">
+              <Zap className="w-4 h-4 text-secondary" />
+              <span className="text-muted-foreground"><strong className="text-foreground">{dedupedJobs.filter(j => j.mpesaCompatible).length}</strong> M-Pesa Compatible</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sm font-body">
-            <Star className="w-4 h-4 text-warning" />
-            <span className="text-muted-foreground"><strong className="text-foreground">{mockJobs.filter(j => j.skillLevel === "Beginner").length}</strong> Beginner Friendly</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm font-body">
-            <Zap className="w-4 h-4 text-secondary" />
-            <span className="text-muted-foreground"><strong className="text-foreground">{mockJobs.filter(j => j.mpesaCompatible).length}</strong> M-Pesa Compatible</span>
-          </div>
+
+          {/* Scan Button */}
+          <button
+            onClick={handleScanJobs}
+            disabled={isScanning}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-display font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {isScanning ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Globe className="w-4 h-4" />
+            )}
+            {isScanning ? "Scanning..." : "Scan International Jobs"}
+          </button>
         </div>
+        {lastScan && (
+          <div className="container max-w-6xl mx-auto px-4 pb-2">
+            <p className="text-xs text-muted-foreground font-body">Last scan: {lastScan}</p>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}

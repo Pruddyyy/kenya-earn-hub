@@ -14,7 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      jobs: {
+        Row: {
+          category: string
+          company: string
+          country_origin: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          duration: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          job_type: string | null
+          kenya_accessible: boolean | null
+          legitimacy_score: number | null
+          mpesa_compatible: boolean | null
+          pay_rate: string | null
+          payment_methods: string[] | null
+          requirements: string[] | null
+          scam_risk: string | null
+          skill_level: string
+          source_platform: string | null
+          source_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          company: string
+          country_origin?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          duration?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          job_type?: string | null
+          kenya_accessible?: boolean | null
+          legitimacy_score?: number | null
+          mpesa_compatible?: boolean | null
+          pay_rate?: string | null
+          payment_methods?: string[] | null
+          requirements?: string[] | null
+          scam_risk?: string | null
+          skill_level?: string
+          source_platform?: string | null
+          source_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          company?: string
+          country_origin?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          duration?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          job_type?: string | null
+          kenya_accessible?: boolean | null
+          legitimacy_score?: number | null
+          mpesa_compatible?: boolean | null
+          pay_rate?: string | null
+          payment_methods?: string[] | null
+          requirements?: string[] | null
+          scam_risk?: string | null
+          skill_level?: string
+          source_platform?: string | null
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
