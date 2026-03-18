@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send } from "lucide-react";
-import avatarMale from "@/assets/avatar-male.png";
-import avatarFemale from "@/assets/avatar-female.png";
+import AnimatedAvatar from "@/components/AnimatedAvatar";
 
 const avatarResponses: Record<string, string> = {
   "easy jobs": "I'd recommend starting with Remotasks or Swagbucks — they're beginner-friendly and accept workers from Kenya! 🎉",
