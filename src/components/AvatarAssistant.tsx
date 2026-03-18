@@ -23,8 +23,7 @@ const AvatarAssistant = () => {
     { role: "bot", text: "Habari! 👋 I'm Teemz, your job-finding assistant. Ask me anything about online jobs in Kenya!" },
   ]);
   const [input, setInput] = useState("");
-
-  const avatarImg = gender === "female" ? avatarFemale : avatarMale;
+  const [isTalking, setIsTalking] = useState(false);
 
   const handleGenderSelect = (g: Gender) => {
     setGender(g);
