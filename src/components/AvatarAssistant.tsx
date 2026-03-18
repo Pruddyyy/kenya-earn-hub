@@ -101,8 +101,9 @@ const AvatarAssistant = () => {
           >
             {/* Header */}
             <div className="hero-gradient p-4 flex items-center gap-3">
-              <img src={avatarImg} alt="Teemz assistant" className="w-10 h-10 rounded-full bg-card object-cover" />
-              <div className="flex-1">
+              <div className="w-10 h-10 rounded-full bg-card flex items-center justify-center overflow-hidden">
+                <AnimatedAvatar gender={gender || "male"} size={36} isTalking={isTalking} />
+              </div>
                 <p className="font-chat font-bold text-primary-foreground text-sm">Teemz</p>
                 <p className="text-primary-foreground/70 text-xs font-chat">Your Job Assistant</p>
               </div>
