@@ -256,12 +256,7 @@ const AvatarAssistant = () => {
           }}
           whileTap={{ scale: 0.92 }}
         >
-          <img
-            src={avatarImg}
-            alt="Teemz assistant"
-            className="w-full h-full object-contain drop-shadow-2xl"
-            style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }}
-          />
+          <AnimatedAvatar gender={gender || "male"} size={96} isWaving={isWaving} isTalking={isTalking} />
         </motion.button>
       </div>
     </div>
