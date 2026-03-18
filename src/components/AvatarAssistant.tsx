@@ -104,6 +104,7 @@ const AvatarAssistant = () => {
               <div className="w-10 h-10 rounded-full bg-card flex items-center justify-center overflow-hidden">
                 <AnimatedAvatar gender={gender || "male"} size={36} isTalking={isTalking} />
               </div>
+              <div className="flex-1">
                 <p className="font-chat font-bold text-primary-foreground text-sm">Teemz</p>
                 <p className="text-primary-foreground/70 text-xs font-chat">Your Job Assistant</p>
               </div>
