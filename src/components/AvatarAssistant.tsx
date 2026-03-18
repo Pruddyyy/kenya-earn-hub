@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send } from "lucide-react";
-import avatarMale from "@/assets/avatar-male.png";
-import avatarFemale from "@/assets/avatar-female.png";
+import AnimatedAvatar from "@/components/AnimatedAvatar";
 
 const avatarResponses: Record<string, string> = {
   "easy jobs": "I'd recommend starting with Remotasks or Swagbucks — they're beginner-friendly and accept workers from Kenya! 🎉",
@@ -24,8 +23,7 @@ const AvatarAssistant = () => {
     { role: "bot", text: "Habari! 👋 I'm Teemz, your job-finding assistant. Ask me anything about online jobs in Kenya!" },
   ]);
   const [input, setInput] = useState("");
-
-  const avatarImg = gender === "female" ? avatarFemale : avatarMale;
+  const [isTalking, setIsTalking] = useState(false);
 
   const handleGenderSelect = (g: Gender) => {
     setGender(g);
@@ -47,7 +45,9 @@ const AvatarAssistant = () => {
           break;
         }
       }
+      setIsTalking(true);
       setMessages((prev) => [...prev, { role: "bot", text: response }]);
+      setTimeout(() => setIsTalking(false), 2000);
     }, 800);
   };
 
@@ -101,7 +101,9 @@ const AvatarAssistant = () => {
           >
             {/* Header */}
             <div className="hero-gradient p-4 flex items-center gap-3">
-              <img src={avatarImg} alt="Teemz assistant" className="w-10 h-10 rounded-full bg-card object-cover" />
+              <div className="w-10 h-10 rounded-full bg-card flex items-center justify-center overflow-hidden">
+                <AnimatedAvatar gender={gender || "male"} size={36} isTalking={isTalking} />
+              </div>
               <div className="flex-1">
                 <p className="font-chat font-bold text-primary-foreground text-sm">Teemz</p>
                 <p className="text-primary-foreground/70 text-xs font-chat">Your Job Assistant</p>
@@ -117,16 +119,16 @@ const AvatarAssistant = () => {
                 <p className="text-xs text-muted-foreground font-chat">Pick the avatar you'd like to chat with</p>
                 <div className="flex justify-center gap-8 pt-2">
                   {[
-                    { g: "male" as Gender, img: avatarMale, label: "Teemz" },
-                    { g: "female" as Gender, img: avatarFemale, label: "Teemz" },
-                  ].map(({ g, img, label }) => (
+                    { g: "male" as Gender, label: "Teemz" },
+                    { g: "female" as Gender, label: "Teemz" },
+                  ].map(({ g, label }) => (
                     <button
                       key={g}
                       onClick={() => handleGenderSelect(g)}
                       className="group flex flex-col items-center gap-2 hover:scale-105 transition-transform"
                     >
-                      <div className="w-24 h-28 overflow-hidden drop-shadow-lg group-hover:drop-shadow-2xl transition-all">
-                        <img src={img} alt={`${label} ${g}`} className="w-full h-full object-contain" />
+                      <div className="w-24 h-28 overflow-visible drop-shadow-lg group-hover:drop-shadow-2xl transition-all">
+                        <AnimatedAvatar gender={g} size={80} isWaving />
                       </div>
                       <span className="text-xs font-chat font-semibold text-muted-foreground group-hover:text-foreground">{label}</span>
                     </button>
@@ -254,12 +256,7 @@ const AvatarAssistant = () => {
           }}
           whileTap={{ scale: 0.92 }}
         >
-          <img
-            src={avatarImg}
-            alt="Teemz assistant"
-            className="w-full h-full object-contain drop-shadow-2xl"
-            style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }}
-          />
+          <AnimatedAvatar gender={gender || "male"} size={96} isWaving={isWaving} isTalking={isTalking} />
         </motion.button>
       </div>
     </div>
