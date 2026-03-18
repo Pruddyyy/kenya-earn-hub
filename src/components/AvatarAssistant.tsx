@@ -45,7 +45,9 @@ const AvatarAssistant = () => {
           break;
         }
       }
+      setIsTalking(true);
       setMessages((prev) => [...prev, { role: "bot", text: response }]);
+      setTimeout(() => setIsTalking(false), 2000);
     }, 800);
   };
 
