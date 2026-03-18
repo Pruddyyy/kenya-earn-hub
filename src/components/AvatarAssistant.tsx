@@ -119,16 +119,16 @@ const AvatarAssistant = () => {
                 <p className="text-xs text-muted-foreground font-chat">Pick the avatar you'd like to chat with</p>
                 <div className="flex justify-center gap-8 pt-2">
                   {[
-                    { g: "male" as Gender, img: avatarMale, label: "Teemz" },
-                    { g: "female" as Gender, img: avatarFemale, label: "Teemz" },
-                  ].map(({ g, img, label }) => (
+                    { g: "male" as Gender, label: "Teemz" },
+                    { g: "female" as Gender, label: "Teemz" },
+                  ].map(({ g, label }) => (
                     <button
                       key={g}
                       onClick={() => handleGenderSelect(g)}
                       className="group flex flex-col items-center gap-2 hover:scale-105 transition-transform"
                     >
-                      <div className="w-24 h-28 overflow-hidden drop-shadow-lg group-hover:drop-shadow-2xl transition-all">
-                        <img src={img} alt={`${label} ${g}`} className="w-full h-full object-contain" />
+                      <div className="w-24 h-28 overflow-visible drop-shadow-lg group-hover:drop-shadow-2xl transition-all">
+                        <AnimatedAvatar gender={g} size={80} isWaving />
                       </div>
                       <span className="text-xs font-chat font-semibold text-muted-foreground group-hover:text-foreground">{label}</span>
                     </button>
