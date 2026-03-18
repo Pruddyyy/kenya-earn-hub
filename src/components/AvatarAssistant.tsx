@@ -53,6 +53,41 @@ const AvatarAssistant = () => {
 
   const showGenderPicker = isOpen && !gender;
 
+  // Speech bubble state
+  const [speechBubble, setSpeechBubble] = useState<string | null>("Habari! 👋");
+  const [isWaving, setIsWaving] = useState(false);
+
+  // Periodic speech bubbles & waving
+  useState(() => {
+    const greetings = [
+      "Habari! 👋",
+      "Need a job? Ask me!",
+      "Hey there! 😊",
+      "I can help! 💼",
+      "Tap me! 🤗",
+      "Karibu! 🇰🇪",
+    ];
+    let idx = 0;
+
+    const interval = setInterval(() => {
+      if (!isOpen) {
+        // Wave animation
+        setIsWaving(true);
+        setTimeout(() => setIsWaving(false), 1500);
+
+        // Show speech bubble
+        idx = (idx + 1) % greetings.length;
+        setSpeechBubble(greetings[idx]);
+        setTimeout(() => setSpeechBubble(null), 3500);
+      }
+    }, 8000);
+
+    // Show initial greeting
+    setTimeout(() => setSpeechBubble(null), 4000);
+
+    return () => clearInterval(interval);
+  });
+
   return (
     <div className="fixed bottom-0 right-4 z-50">
       <AnimatePresence>
@@ -141,12 +176,30 @@ const AvatarAssistant = () => {
         )}
       </AnimatePresence>
 
-      {/* Gaming-style Avatar — full character, no bubble */}
+      {/* Gaming-style Avatar with speech & wave */}
       <div style={{ perspective: "800px" }} className="relative">
+        {/* Speech bubble */}
+        <AnimatePresence>
+          {speechBubble && !isOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.5, y: 10 }}
+              className="absolute -top-14 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
+            >
+              <div className="bg-card text-foreground text-xs font-chat font-semibold px-3 py-1.5 rounded-xl card-shadow border border-border relative">
+                {speechBubble}
+                {/* Triangle pointer */}
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-card border-r border-b border-border rotate-45" />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Name tag */}
         <motion.div
           className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap"
-          animate={{ opacity: [0.7, 1, 0.7] }}
+          animate={{ opacity: speechBubble && !isOpen ? 0 : [0.7, 1, 0.7] }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
           <span className="bg-primary/90 text-primary-foreground text-[10px] font-chat font-bold px-2 py-0.5 rounded-full shadow-lg">
@@ -172,6 +225,12 @@ const AvatarAssistant = () => {
           animate={
             isOpen
               ? { x: 0, y: 0, rotateY: 0, rotateZ: 0, scale: 1 }
+              : isWaving
+              ? {
+                  rotateZ: [0, -15, 12, -15, 12, -8, 0],
+                  y: [0, -10, -6, -10, -6, -3, 0],
+                  scale: [1, 1.08, 1.05, 1.08, 1.05, 1.02, 1],
+                }
               : {
                   x: [0, -20, 12, -28, 18, 0],
                   y: [0, -8, -18, -4, -14, 0],
@@ -183,6 +242,8 @@ const AvatarAssistant = () => {
           transition={
             isOpen
               ? { duration: 0.3 }
+              : isWaving
+              ? { duration: 1.5, ease: "easeInOut" }
               : { repeat: Infinity, duration: 10, ease: "easeInOut" }
           }
           whileHover={{
