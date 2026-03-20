@@ -33,7 +33,7 @@ function mapDbJob(row: any): Job {
     isNew: new Date(row.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000),
     scamRisk: (row.scam_risk?.toLowerCase() || 'safe') as any,
     postedDate: new Date(row.created_at).toLocaleDateString(),
-    countryOrigin: row.country_origin,
+    countryOrigin: row.country_origin || 'International',
   };
 }
 
@@ -42,13 +42,13 @@ const Index = () => {
   const [mpesaOnly, setMpesaOnly] = useState(false);
   const [beginnerOnly, setBeginnerOnly] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState("All");
+  const [selectedCountry, setSelectedCountry] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [dbJobs, setDbJobs] = useState<Job[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScan, setLastScan] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Fetch jobs from database
   const fetchJobs = async () => {
     const { data, error } = await supabase
       .from('jobs')
@@ -66,10 +66,8 @@ const Index = () => {
     fetchJobs();
   }, []);
 
-  // Combine DB jobs with mock jobs (mock as fallback)
   const allJobs = dbJobs.length > 0 ? [...dbJobs, ...mockJobs] : mockJobs;
 
-  // Deduplicate by title+company
   const dedupedJobs = useMemo(() => {
     const seen = new Set<string>();
     return allJobs.filter(job => {
@@ -80,16 +78,36 @@ const Index = () => {
     });
   }, [allJobs]);
 
+  // Extract unique countries for filter
+  const availableCountries = useMemo(() => {
+    const countries = new Set<string>();
+    dedupedJobs.forEach(job => {
+      if (job.countryOrigin) countries.add(job.countryOrigin);
+    });
+    return Array.from(countries).sort();
+  }, [dedupedJobs]);
+
   const filteredJobs = useMemo(() => {
     return dedupedJobs.filter((job) => {
       if (selectedCategory !== "All" && job.category !== selectedCategory) return false;
+      if (selectedCountry !== "All" && job.countryOrigin !== selectedCountry) return false;
       if (mpesaOnly && !job.mpesaCompatible) return false;
       if (beginnerOnly && job.skillLevel !== "Beginner") return false;
       if (selectedPayment !== "All" && !job.paymentMethods.includes(selectedPayment)) return false;
       if (searchQuery && !job.title.toLowerCase().includes(searchQuery.toLowerCase()) && !job.company.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     });
-  }, [dedupedJobs, selectedCategory, mpesaOnly, beginnerOnly, selectedPayment, searchQuery]);
+  }, [dedupedJobs, selectedCategory, selectedCountry, mpesaOnly, beginnerOnly, selectedPayment, searchQuery]);
+
+  // Group jobs by country for the summary
+  const jobsByCountry = useMemo(() => {
+    const map: Record<string, number> = {};
+    dedupedJobs.forEach(job => {
+      const c = job.countryOrigin || "International";
+      map[c] = (map[c] || 0) + 1;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }, [dedupedJobs]);
 
   const handleScanJobs = async () => {
     setIsScanning(true);
@@ -153,9 +171,12 @@ const Index = () => {
               <Zap className="w-4 h-4 text-secondary" />
               <span className="text-muted-foreground"><strong className="text-foreground">{dedupedJobs.filter(j => j.mpesaCompatible).length}</strong> M-Pesa Compatible</span>
             </div>
+            <div className="flex items-center gap-2 text-sm font-body">
+              <Globe className="w-4 h-4 text-accent-foreground" />
+              <span className="text-muted-foreground"><strong className="text-foreground">{availableCountries.length}</strong> Countries</span>
+            </div>
           </div>
 
-          {/* Scan Button */}
           <button
             onClick={handleScanJobs}
             disabled={isScanning}
@@ -169,6 +190,29 @@ const Index = () => {
             {isScanning ? "Scanning..." : "Scan International Jobs"}
           </button>
         </div>
+
+        {/* Country summary bar */}
+        {jobsByCountry.length > 1 && (
+          <div className="container max-w-6xl mx-auto px-4 pb-3">
+            <div className="flex items-center gap-3 flex-wrap text-xs font-body">
+              <span className="text-muted-foreground font-medium">Jobs by country:</span>
+              {jobsByCountry.slice(0, 8).map(([country, count]) => (
+                <button
+                  key={country}
+                  onClick={() => setSelectedCountry(selectedCountry === country ? "All" : country)}
+                  className={`px-2 py-0.5 rounded-full transition-colors ${
+                    selectedCountry === country
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {country} ({count})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {lastScan && (
           <div className="container max-w-6xl mx-auto px-4 pb-2">
             <p className="text-xs text-muted-foreground font-body">Last scan: {lastScan}</p>
@@ -184,7 +228,7 @@ const Index = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search jobs by title or company..."
+              placeholder="Search jobs by title, company, or country..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-lg text-sm font-body text-foreground outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
@@ -192,7 +236,6 @@ const Index = () => {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar */}
             <div className="w-full lg:w-72 flex-shrink-0">
               <FilterSidebar
                 selectedCategory={selectedCategory}
@@ -203,11 +246,20 @@ const Index = () => {
                 setBeginnerOnly={setBeginnerOnly}
                 selectedPayment={selectedPayment}
                 setSelectedPayment={setSelectedPayment}
+                selectedCountry={selectedCountry}
+                setSelectedCountry={setSelectedCountry}
+                availableCountries={availableCountries}
               />
             </div>
 
-            {/* Job Grid */}
             <div className="flex-1">
+              {selectedCountry !== "All" && (
+                <div className="mb-4 p-3 bg-accent/10 rounded-lg border border-accent/20">
+                  <p className="text-sm font-body text-foreground">
+                    Showing <strong>{filteredJobs.length}</strong> jobs from <strong>{selectedCountry}</strong> available for Kenyans
+                  </p>
+                </div>
+              )}
               {filteredJobs.length > 0 ? (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {filteredJobs.map((job, i) => (
@@ -217,7 +269,7 @@ const Index = () => {
               ) : (
                 <div className="text-center py-16">
                   <p className="text-muted-foreground font-body text-lg">No jobs match your filters.</p>
-                  <p className="text-muted-foreground font-body text-sm mt-1">Try adjusting your criteria above.</p>
+                  <p className="text-muted-foreground font-body text-sm mt-1">Try adjusting your criteria or scan for new international jobs.</p>
                 </div>
               )}
             </div>
@@ -225,16 +277,14 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Resources */}
       <div id="platforms">
         <ResourceSection />
       </div>
 
-      {/* Footer */}
       <footer className="bg-card border-t border-border py-8 px-4">
         <div className="container max-w-6xl mx-auto text-center">
           <p className="text-sm text-muted-foreground font-body">
-            © 2026 Kenya Online Jobs Finder. All jobs verified for Kenya accessibility.
+            © 2026 Kenya Online Jobs Finder. Tracing jobs for Kenyans across the world.
           </p>
         </div>
       </footer>

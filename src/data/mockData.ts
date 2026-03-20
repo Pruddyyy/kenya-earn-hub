@@ -22,6 +22,7 @@ export const mockJobs: Job[] = [
     isNew: true,
     scamRisk: "safe",
     postedDate: "2 hours ago",
+    countryOrigin: "USA",
   },
   {
     id: "2",
@@ -43,6 +44,7 @@ export const mockJobs: Job[] = [
     link: "https://appen.com",
     scamRisk: "safe",
     postedDate: "5 hours ago",
+    countryOrigin: "Australia",
   },
   {
     id: "3",
@@ -64,6 +66,7 @@ export const mockJobs: Job[] = [
     link: "https://belaysolutions.com",
     scamRisk: "safe",
     postedDate: "1 day ago",
+    countryOrigin: "USA",
   },
   {
     id: "4",
@@ -86,6 +89,7 @@ export const mockJobs: Job[] = [
     isNew: true,
     scamRisk: "safe",
     postedDate: "3 hours ago",
+    countryOrigin: "International",
   },
   {
     id: "5",
@@ -107,6 +111,7 @@ export const mockJobs: Job[] = [
     link: "https://upwork.com",
     scamRisk: "safe",
     postedDate: "6 hours ago",
+    countryOrigin: "USA",
   },
   {
     id: "6",
@@ -128,6 +133,7 @@ export const mockJobs: Job[] = [
     link: "https://clickworker.com",
     scamRisk: "safe",
     postedDate: "1 day ago",
+    countryOrigin: "Germany",
   },
   {
     id: "7",
@@ -150,6 +156,7 @@ export const mockJobs: Job[] = [
     isNew: true,
     scamRisk: "safe",
     postedDate: "4 hours ago",
+    countryOrigin: "UAE",
   },
   {
     id: "8",
@@ -171,6 +178,7 @@ export const mockJobs: Job[] = [
     link: "https://fiverr.com",
     scamRisk: "safe",
     postedDate: "8 hours ago",
+    countryOrigin: "UK",
   },
 ];
 

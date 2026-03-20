@@ -1,5 +1,5 @@
 import { Job } from "@/types/jobs";
-import { Clock, DollarSign, MapPin, Sparkles, Shield, Smartphone } from "lucide-react";
+import { Clock, DollarSign, MapPin, Sparkles, Shield, Smartphone, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 
 const categoryColors: Record<string, string> = {
@@ -13,7 +13,17 @@ const categoryColors: Record<string, string> = {
   "Content Moderation": "badge-category",
 };
 
+const countryFlags: Record<string, string> = {
+  USA: "🇺🇸", UK: "🇬🇧", UAE: "🇦🇪", China: "🇨🇳", Canada: "🇨🇦",
+  Germany: "🇩🇪", India: "🇮🇳", Australia: "🇦🇺", International: "🌍",
+  Kenya: "🇰🇪", Japan: "🇯🇵", Singapore: "🇸🇬", Netherlands: "🇳🇱",
+  France: "🇫🇷", Sweden: "🇸🇪", Switzerland: "🇨🇭", Ireland: "🇮🇪",
+  "South Africa": "🇿🇦", Nigeria: "🇳🇬", Brazil: "🇧🇷",
+};
+
 const JobCard = ({ job, index }: { job: Job; index: number }) => {
+  const flag = countryFlags[job.countryOrigin || "International"] || "🌍";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -24,10 +34,15 @@ const JobCard = ({ job, index }: { job: Job; index: number }) => {
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium font-body ${categoryColors[job.category] || "badge-category"}`}>
               {job.category}
             </span>
+            {job.countryOrigin && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-accent/10 text-accent-foreground flex items-center gap-1">
+                <Globe className="w-3 h-3" /> {flag} {job.countryOrigin}
+              </span>
+            )}
             {job.isNew && (
               <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-primary text-primary-foreground flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> New
