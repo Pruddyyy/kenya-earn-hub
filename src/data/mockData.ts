@@ -89,6 +89,7 @@ export const mockJobs: Job[] = [
     isNew: true,
     scamRisk: "safe",
     postedDate: "3 hours ago",
+    countryOrigin: "International",
   },
   {
     id: "5",
