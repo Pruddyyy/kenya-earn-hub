@@ -66,6 +66,7 @@ export const mockJobs: Job[] = [
     link: "https://belaysolutions.com",
     scamRisk: "safe",
     postedDate: "1 day ago",
+    countryOrigin: "USA",
   },
   {
     id: "4",
