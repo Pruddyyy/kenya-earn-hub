@@ -44,6 +44,7 @@ export const mockJobs: Job[] = [
     link: "https://appen.com",
     scamRisk: "safe",
     postedDate: "5 hours ago",
+    countryOrigin: "Australia",
   },
   {
     id: "3",
