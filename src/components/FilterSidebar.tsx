@@ -1,5 +1,5 @@
 import { JobCategory } from "@/types/jobs";
-import { Filter, Smartphone, Zap, Globe } from "lucide-react";
+import { Filter, Smartphone, Zap, Globe, MapPin } from "lucide-react";
 
 interface FilterSidebarProps {
   selectedCategory: string;
@@ -10,6 +10,9 @@ interface FilterSidebarProps {
   setBeginnerOnly: (v: boolean) => void;
   selectedPayment: string;
   setSelectedPayment: (p: string) => void;
+  selectedCountry: string;
+  setSelectedCountry: (c: string) => void;
+  availableCountries: string[];
 }
 
 const categories: (JobCategory | "All")[] = [
@@ -24,12 +27,36 @@ const FilterSidebar = ({
   mpesaOnly, setMpesaOnly,
   beginnerOnly, setBeginnerOnly,
   selectedPayment, setSelectedPayment,
+  selectedCountry, setSelectedCountry,
+  availableCountries,
 }: FilterSidebarProps) => {
   return (
     <aside className="bg-card rounded-xl p-5 card-shadow h-fit sticky top-4">
       <div className="flex items-center gap-2 mb-5">
         <Filter className="w-4 h-4 text-primary" />
         <h2 className="font-display font-bold text-foreground">Filters</h2>
+      </div>
+
+      {/* Country */}
+      <div className="mb-5">
+        <p className="text-xs text-muted-foreground font-body font-medium uppercase tracking-wider mb-2 flex items-center gap-1">
+          <MapPin className="w-3 h-3" /> Country of Origin
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {["All", ...availableCountries].map((country) => (
+            <button
+              key={country}
+              onClick={() => setSelectedCountry(country)}
+              className={`text-xs px-3 py-1.5 rounded-full font-body font-medium transition-colors ${
+                selectedCountry === country
+                  ? "bg-accent text-accent-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {country}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Category */}
