@@ -178,6 +178,7 @@ export const mockJobs: Job[] = [
     link: "https://fiverr.com",
     scamRisk: "safe",
     postedDate: "8 hours ago",
+    countryOrigin: "UK",
   },
 ];
 
