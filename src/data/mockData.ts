@@ -111,6 +111,7 @@ export const mockJobs: Job[] = [
     link: "https://upwork.com",
     scamRisk: "safe",
     postedDate: "6 hours ago",
+    countryOrigin: "USA",
   },
   {
     id: "6",
