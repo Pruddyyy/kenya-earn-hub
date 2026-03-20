@@ -133,6 +133,7 @@ export const mockJobs: Job[] = [
     link: "https://clickworker.com",
     scamRisk: "safe",
     postedDate: "1 day ago",
+    countryOrigin: "Germany",
   },
   {
     id: "7",
