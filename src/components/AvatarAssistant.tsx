@@ -224,8 +224,8 @@ const AvatarAssistant = () => {
                       placeholder="Ask Teemz about jobs..."
                       className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm font-chat text-foreground outline-none placeholder:text-muted-foreground"
                     />
-                    <button type="submit" className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 transition-opacity">
-                      <Send className="w-4 h-4" />
+                    <button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50">
+                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </button>
                   </form>
                 </div>
