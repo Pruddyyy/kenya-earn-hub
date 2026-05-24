@@ -1,17 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send } from "lucide-react";
+import { X, Send, Loader2 } from "lucide-react";
 import AnimatedAvatar from "@/components/AnimatedAvatar";
+import { toast } from "@/hooks/use-toast";
 
-const avatarResponses: Record<string, string> = {
-  "easy jobs": "I'd recommend starting with Remotasks or Swagbucks — they're beginner-friendly and accept workers from Kenya! 🎉",
-  "mpesa": "Jobs on Upwork and Fiverr support M-Pesa withdrawals through Payoneer. I've highlighted M-Pesa compatible jobs in the listings!",
-  "scam": "Use the legitimacy checker at the top of the page! Paste any URL and I'll help verify if it's safe. 🛡️",
-  "virtual assistant": "Check out Belay and Time Etc for VA jobs. They hire remote assistants and pay $10–15/hr!",
-  default: "I'm here to help you find legit online jobs in Kenya! Try asking about easy jobs, M-Pesa payments, or how to spot scams. 😊",
-};
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/teemz-chat`;
 
 type Gender = "male" | "female";
+type Msg = { role: "user" | "assistant"; content: string };
 
 const AvatarAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
