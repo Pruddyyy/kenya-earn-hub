@@ -1,34 +1,43 @@
 import { useState } from "react";
-import { Search, Shield, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { Search, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+
+type CheckResult = {
+  score: number;
+  status: "safe" | "moderate" | "high";
+  registered: boolean | null;
+  registration_note: string;
+  review_summary: string;
+  details: string[];
+  sources: { title: string; url: string }[];
+};
 
 const HeroSection = () => {
   const [url, setUrl] = useState("");
   const [checking, setChecking] = useState(false);
-  const [result, setResult] = useState<null | { score: number; status: string; details: string[] }>(null);
+  const [result, setResult] = useState<CheckResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleCheck = (e: React.FormEvent) => {
+  const handleCheck = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
     setChecking(true);
     setResult(null);
+    setError(null);
 
-    // Simulated legitimacy check
-    setTimeout(() => {
-      const knownSafe = ["upwork.com", "fiverr.com", "remotasks.com", "appen.com", "clickworker.com", "toloka.ai"];
-      const domain = url.replace(/https?:\/\//, "").replace(/\/.*/, "").toLowerCase();
-      const isSafe = knownSafe.some((s) => domain.includes(s));
-      const score = isSafe ? 85 + Math.floor(Math.random() * 15) : 20 + Math.floor(Math.random() * 30);
-
-      setResult({
-        score,
-        status: score >= 75 ? "safe" : score >= 40 ? "moderate" : "high",
-        details: isSafe
-          ? ["Domain is well-established", "Accepts workers from Kenya", "Verified payment methods", "No VPN required"]
-          : ["Domain age is recent", "Limited user reviews found", "Payment methods unverified", "Proceed with caution"],
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("legitimacy-check", {
+        body: { url },
       });
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
+      setResult(data as CheckResult);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to check. Try again.");
+    } finally {
       setChecking(false);
-    }, 1500);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -61,7 +70,7 @@ const HeroSection = () => {
             Find Legit Online Jobs<br />Available in Kenya
           </h1>
           <p className="text-primary-foreground/80 text-lg mb-8 font-body max-w-2xl mx-auto">
-            Verify job websites, discover real opportunities, and avoid scams. All jobs pay in USD or KES — no VPN needed.
+            Real reviews. Real registration checks. Real verdicts — powered by live web data.
           </p>
         </motion.div>
 
@@ -90,20 +99,34 @@ const HeroSection = () => {
               ) : (
                 <Search className="w-4 h-4" />
               )}
-              {checking ? "Checking..." : "Check"}
+              {checking ? "Analyzing..." : "Check"}
             </button>
           </div>
+          {checking && (
+            <p className="text-primary-foreground/70 text-xs mt-2 font-body">
+              Searching real reviews, scam reports & registration records...
+            </p>
+          )}
         </motion.form>
 
         <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="max-w-xl mx-auto bg-destructive/10 border border-destructive/30 rounded-xl p-4 text-destructive text-sm font-body"
+            >
+              {error}
+            </motion.div>
+          )}
+
           {result && (
             <motion.div
               initial={{ opacity: 0, y: -10, height: 0 }}
               animate={{ opacity: 1, y: 0, height: "auto" }}
               exit={{ opacity: 0, y: -10, height: 0 }}
-              className="max-w-xl mx-auto bg-card rounded-xl p-5 card-shadow text-left"
+              className="max-w-xl mx-auto bg-card rounded-xl p-5 card-shadow text-left space-y-4"
             >
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3">
                 {getStatusIcon(result.status)}
                 <div>
                   <p className="font-display font-bold text-foreground">
@@ -114,14 +137,48 @@ const HeroSection = () => {
                   </p>
                 </div>
               </div>
+
+              <div className="flex items-start gap-2 bg-muted/40 rounded-lg p-3">
+                <Building2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="text-xs font-body">
+                  <p className="font-semibold text-foreground">
+                    Registration: {result.registered === true ? "Verified" : result.registered === false ? "Not Found" : "Unclear"}
+                  </p>
+                  <p className="text-muted-foreground">{result.registration_note}</p>
+                </div>
+              </div>
+
+              {result.review_summary && (
+                <div className="text-xs font-body text-muted-foreground italic border-l-2 border-primary/40 pl-3">
+                  "{result.review_summary}"
+                </div>
+              )}
+
               <ul className="space-y-1.5">
-                {result.details.map((d, i) => (
-                  <li key={i} className="text-sm text-muted-foreground font-body flex items-center gap-2">
-                    <span className={`w-1.5 h-1.5 rounded-full ${result.status === "safe" ? "bg-primary" : "bg-warning"}`} />
+                {result.details?.map((d, i) => (
+                  <li key={i} className="text-sm text-muted-foreground font-body flex items-start gap-2">
+                    <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${result.status === "safe" ? "bg-primary" : "bg-warning"}`} />
                     {d}
                   </li>
                 ))}
               </ul>
+
+              {result.sources?.length > 0 && (
+                <div className="pt-2 border-t border-border">
+                  <p className="text-xs font-display font-semibold text-foreground mb-2">Sources</p>
+                  <ul className="space-y-1">
+                    {result.sources.slice(0, 5).map((s, i) => (
+                      <li key={i}>
+                        <a href={s.url} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline font-body flex items-center gap-1">
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{s.title || s.url}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
