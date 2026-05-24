@@ -1,17 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send } from "lucide-react";
+import { X, Send, Loader2 } from "lucide-react";
 import AnimatedAvatar from "@/components/AnimatedAvatar";
+import { toast } from "@/hooks/use-toast";
 
-const avatarResponses: Record<string, string> = {
-  "easy jobs": "I'd recommend starting with Remotasks or Swagbucks — they're beginner-friendly and accept workers from Kenya! 🎉",
-  "mpesa": "Jobs on Upwork and Fiverr support M-Pesa withdrawals through Payoneer. I've highlighted M-Pesa compatible jobs in the listings!",
-  "scam": "Use the legitimacy checker at the top of the page! Paste any URL and I'll help verify if it's safe. 🛡️",
-  "virtual assistant": "Check out Belay and Time Etc for VA jobs. They hire remote assistants and pay $10–15/hr!",
-  default: "I'm here to help you find legit online jobs in Kenya! Try asking about easy jobs, M-Pesa payments, or how to spot scams. 😊",
-};
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/teemz-chat`;
 
 type Gender = "male" | "female";
+type Msg = { role: "user" | "assistant"; content: string };
 
 const AvatarAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,31 +20,92 @@ const AvatarAssistant = () => {
   ]);
   const [input, setInput] = useState("");
   const [isTalking, setIsTalking] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleGenderSelect = (g: Gender) => {
     setGender(g);
     localStorage.setItem("teemz-gender", g);
   };
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
     const userMsg = input.trim();
-    setMessages((prev) => [...prev, { role: "user", text: userMsg }]);
+    const nextMessages = [...messages, { role: "user" as const, text: userMsg }];
+    setMessages(nextMessages);
     setInput("");
+    setIsLoading(true);
+    setIsTalking(true);
 
-    setTimeout(() => {
-      const lower = userMsg.toLowerCase();
-      let response = avatarResponses.default;
-      for (const [key, val] of Object.entries(avatarResponses)) {
-        if (key !== "default" && lower.includes(key)) {
-          response = val;
-          break;
+    try {
+      const apiMessages: Msg[] = nextMessages
+        .filter((m, i) => i > 0 || m.role === "user")
+        .map((m) => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text }));
+
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: apiMessages }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        if (resp.status === 429) toast({ title: "Slow down", description: "Too many requests — try again in a moment.", variant: "destructive" });
+        else if (resp.status === 402) toast({ title: "AI credits exhausted", description: "Please add credits to keep chatting with Teemz.", variant: "destructive" });
+        else toast({ title: "Teemz had trouble replying", description: "Please try again.", variant: "destructive" });
+        setIsLoading(false);
+        setIsTalking(false);
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let assistantText = "";
+      let started = false;
+      let done = false;
+
+      while (!done) {
+        const { done: streamDone, value } = await reader.read();
+        if (streamDone) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let nl: number;
+        while ((nl = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, nl);
+          buffer = buffer.slice(nl + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const json = line.slice(6).trim();
+          if (json === "[DONE]") { done = true; break; }
+          try {
+            const parsed = JSON.parse(json);
+            const delta: string | undefined = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              assistantText += delta;
+              if (!started) {
+                started = true;
+                setMessages((prev) => [...prev, { role: "bot", text: assistantText }]);
+              } else {
+                setMessages((prev) =>
+                  prev.map((m, i) => (i === prev.length - 1 ? { ...m, text: assistantText } : m))
+                );
+              }
+            }
+          } catch {
+            buffer = line + "\n" + buffer;
+            break;
+          }
         }
       }
-      setIsTalking(true);
-      setMessages((prev) => [...prev, { role: "bot", text: response }]);
-      setTimeout(() => setIsTalking(false), 2000);
-    }, 800);
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Connection error", description: "Couldn't reach Teemz. Try again.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => setIsTalking(false), 600);
+    }
   };
 
   const showGenderPicker = isOpen && !gender;
@@ -167,8 +224,8 @@ const AvatarAssistant = () => {
                       placeholder="Ask Teemz about jobs..."
                       className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm font-chat text-foreground outline-none placeholder:text-muted-foreground"
                     />
-                    <button type="submit" className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 transition-opacity">
-                      <Send className="w-4 h-4" />
+                    <button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50">
+                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </button>
                   </form>
                 </div>
